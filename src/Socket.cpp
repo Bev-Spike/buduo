@@ -9,6 +9,9 @@
 
 Socket::Socket() : _fd(-1) {
     _fd = ::socket(AF_INET, SOCK_STREAM, 0);
+    //设置端口可重用
+    int val = 1;
+    setsockopt(_fd,SOL_SOCKET,SO_REUSEADDR,(void *)&val,sizeof(int));
     errif(_fd== -1, "socket create error");
 }
 

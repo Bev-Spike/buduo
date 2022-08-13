@@ -64,7 +64,6 @@ void Epoll::updateChannel(Channel* channel) {
 
 void Epoll::removeChannel(Channel* ch) {
     int fd = ch->getFd();
-    printf("del once");
     errif(epoll_ctl(_epfd, EPOLL_CTL_DEL, fd, nullptr) == -1,
           "epoll del error");
     ch->setNoInEpoll();

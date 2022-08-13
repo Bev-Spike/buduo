@@ -1,6 +1,7 @@
 #pragma once
 #include <functional>
 #include <bits/stdint-uintn.h>
+#include <sys/epoll.h>
 class Epoll;
 class EventLoop;
 //可以将channel理解为具体事件类
@@ -36,7 +37,9 @@ class Channel {
     void disableAll();
     //在epoll中注销
     void remove();
-    
+    //判断是否正在监听写事件（是否已有数据待发送）
+    bool isWriting() { return _events & EPOLLOUT; }
+    bool isReading() {return _events & EPOLLIN;}
     //调用回调函数
     void handleEvent();
     void setRevents(uint32_t);

@@ -28,7 +28,15 @@ void echo(Connection* conn, Buffer* readBuf) {
 int main() {
     unique_ptr<EventLoop> loop(new EventLoop());
     unique_ptr<Server> server(new Server(loop.get()));
-    server->onMessage(echo);
+    server->setMessageCallback(echo);
+    server->setConnectionCallBack([](Connection* conn) {
+        if(conn->getState() == Connection::Connected)
+            cout << "hello new Connetion :" << conn->getSocket()->getFd()
+                 << endl;
+        else {
+            cout << "bye Connetion" << endl;
+        }
+    });
     loop->loop();
 
     return 0;

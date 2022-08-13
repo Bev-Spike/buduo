@@ -6,6 +6,7 @@
 #include "Channel.h"
 #include "Acceptor.h"
 #include "ThreadPool.h"
+#include <algorithm>
 #include <functional>
 #include <memory>
 #include <string.h>
@@ -44,6 +45,8 @@ void Server::newConnction(Socket* clntSock) {
         std::bind(&Server::deleteConnection, this, std::placeholders::_1);
     conn->setDeleteConnctionCallBack(cb);
     conn->setMessageCallBack(_messageCallback);
+    conn->setConnectionCallBack(_connetionCallback);
+    conn->connectionEstablished();
     connections[clntSock->getFd()] = move(conn);
 }
 
@@ -52,6 +55,11 @@ void Server::deleteConnection(Socket* clntSock) {
     printf("deleteConnetion socket fd:%d \n", clntSock->getFd());
 }
 
-void Server::onMessage(std::function<void(Connection*, Buffer*)> fn) {
+void Server::setMessageCallback(std::function<void(Connection*, Buffer*)> fn) {
     _messageCallback = std::move(fn);
+}
+
+
+void Server::setConnectionCallBack(std::function<void(Connection*)> cb) {
+    _connetionCallback = std::move(cb);
 }

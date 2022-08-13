@@ -25,11 +25,18 @@ Connection::Connection(EventLoop* loop, Socket* sock)
     std::function<void()> cb = std::bind(&Connection::handleRead, this);
     _channel->setReadCallBack(cb);
     _channel->setWriteCallBack(std::bind(&Connection::handleWrite, this));
+
+}
+
+void Connection::connectionEstablished() {
+
     //对于用户连接，统一使用边缘触发
     _channel->setIsEt(true);
     _channel->enableReading();
     _state = Connected;
+    _connetionCallback(this);
 }
+
 Connection::~Connection() { printf("Connction 析构\n"); }
 void Connection::echo() {
     int sockfd = _sock->getFd();
@@ -69,6 +76,10 @@ void Connection::setDeleteConnctionCallBack(std::function<void(Socket*)> cb) {
 
 void Connection::setMessageCallBack(std::function<void(Connection*, Buffer*)> callback) {
     _messageCallback = callback;
+}
+
+void Connection::setConnectionCallBack(std::function<void(Connection*)> cb) {
+    _connetionCallback = cb;
 }
 
 Connection::State Connection::getState() {
@@ -135,6 +146,8 @@ void Connection::handleWrite() {
 // socket fd出现时，自动将当前的connection对象覆盖并析构掉
 void Connection::handleClose() {
     _state = Closed;
+    _connetionCallback(this);
+
     //在EpollLoop中移除channel
     _channel->remove();
     _deleteConnectionCallBack(_sock.get());
@@ -145,32 +158,52 @@ void Connection::handleClose() {
 //采用在本线程直接写的做法
 void Connection::send(std::string msg) { send(msg.data(), msg.length()); }
 //对于用户来讲，默认调用一次send，发送模块就会将数据完整的发送过去，不需要自己控制发送中的各种情况
-void Connection::send(char* data, ssize_t len) {
+void Connection::send(const char* data, ssize_t len) {
     if (_state == Connected) {
-        int haveWrite = 0;
-        //如果当前发送缓冲区没有待发送的数据，直接向socket中写数据
-        if (_writeBuffer->readableBytes() == 0) {
-            int n = ::write(_sock->getFd(), data, len);
-            if (n >= 0) {
-                haveWrite += n;
-            }
-            else {
-                haveWrite = 0;
-                if (errno != EWOULDBLOCK || errno != EAGAIN) {
-                    _state = Closed;
-                    printf("send error\n");
-                }
-            }
+        if (_loop->isInLoopThread()) {
+            sendInLoop(data, len);
         }
-        //如果发送缓冲区有数据或者刚才的数据没发完，将data写入outBuffer，并注册写事件
-        if (haveWrite < len) {
-            _writeBuffer->append(data + haveWrite, len - haveWrite);
-            _channel->enableWriting();
+        //如果不在自己的IO线程运行，需要将其移动到自己的IO线程上运行
+        else {
+            void (Connection::*fp)(const char* data, ssize_t len) = &Connection::sendInLoop;
+            _loop->runInLoop(std::bind(fp, this, data, len));
         }
     }
     else {
         printf("connection have closed\n");
     }
 }
+
+void Connection::sendInLoop(const std::string& msg) {
+    sendInLoop(msg.data(), msg.size());
+}
+
+//调用时应确保在自己的IO线程调用
+void Connection::sendInLoop(const char* data, ssize_t len) {
+    int haveWrite = 0;
+    //如果当前发送缓冲区没有待发送的数据，直接向socket中写数据
+    if (!_channel->isWriting() && _writeBuffer->readableBytes() == 0) {
+        //因为使用的是ET触发，应一次性将所有数据写入，直到写完或写满
+        while(haveWrite < len){
+            int n = ::write(_sock->getFd(), data + haveWrite, len - haveWrite);
+            if (n >= 0) {
+                haveWrite += n;
+            }
+            //n == -1 通常是缓冲区已满
+            else {
+                if (errno != EWOULDBLOCK || errno != EAGAIN) {
+                    _state = Closed;
+                    printf("send error\n");
+                }
+            }
+        }
+    }
+    //如果发送缓冲区有数据或者刚才的数据没发完，将data写入outBuffer，并注册写事件
+    if (haveWrite < len) {
+        _writeBuffer->append(data + haveWrite, len - haveWrite);
+        _channel->enableWriting();
+    }
+}
+
 //将socket上的数据读入到缓冲区中
 void Connection::read() {}
