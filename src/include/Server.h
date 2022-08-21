@@ -30,6 +30,10 @@ class Server {
   public:
     Server(EventLoop*);
     ~Server() = default;
+    void start() {
+        _mainReactor->loop();
+    }
+
     //设置用户自定义事件处理
     void setMessageCallback(std::function<void(Connection*, Buffer*)> fn);
     //该函数可用于连接建立和连接关闭时用户所作出的行为

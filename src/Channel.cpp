@@ -60,10 +60,12 @@ void Channel::setWriteCallBack(std::function<void()> callback) {
 void Channel::handleEvent() {
     //读事件、带外事件
     if (_revents & (EPOLLIN | EPOLLPRI)) {
+        //printf("read callback\n");
         _readCallBack();
     }
     //写事件触发
     else if (_revents & (EPOLLOUT)) {
+        //printf("write callback\n");
         _writeCallBack();
     }
     else {

@@ -16,7 +16,7 @@ set(CMAKE_CXX_STANDARD_REQUIRED ON)
 # 设置是否启用GCC的拓展功能
 set(CMAKE_CXX_EXTENSIONS OFF)
 # 设置编译选项
-#set(CMAKE_CXX_FLAGS_DEBUG  "${CMAKE_CXX_FLAGS_DEBUG} -fsanitize=address")
+# set(CMAKE_CXX_FLAGS_DEBUG  "${CMAKE_CXX_FLAGS_DEBUG} -fsanitize=address")
 
 # 输出目录
 set(OUT_DIR "${CMAKE_SOURCE_DIR}/out")
@@ -50,7 +50,7 @@ set(EXECUTABLE_OUTPUT_PATH ${OUT_DIR})
 
 #设置编译目标
 add_executable(${SERVER_TARGET} ./test/server.cpp)
-add_executable(${CILENT_TARGET} ./test/cilent.cpp)
+add_executable(${CILENT_TARGET} ./test/chatCilent.cpp)
 add_executable(${TEST_TARGET} ./test/ttest.cpp)
 add_executable(mutiCilent ./test/mutiCilent.cpp)
 # 添加链接库

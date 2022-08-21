@@ -3,6 +3,7 @@
 #include "Channel.h"
 #include "util.h"
 #include <bits/stdint-uintn.h>
+#include <cstdio>
 #include <memory>
 #include <mutex>
 #include <sys/types.h>
@@ -32,7 +33,9 @@ void EventLoop::loop() {
     while (!quit) {
         std::vector<Channel*> chs;
         chs = _ep->poll();
+        //printf("poll return, chs.size=%d\n", (int)chs.size());
         for (auto& ch : chs) {
+            //printf("ch.fd = %d\n", ch->getFd());
             //调用channel注册的回调函数
             ch->handleEvent();
         }
@@ -72,6 +75,7 @@ void EventLoop::wakeup() {
     uint64_t one = 1;
     //往wakeupFd中写入8字节从而唤醒（eventFd的缓冲区也就8字节）
     ssize_t n = ::write(_wakeFd, &one, sizeof(one));
+    //printf("have try to wakeup once\n");
     errif((n != sizeof(one)), "write wakeupFd error");
 }
 //执行pendingqueue里的所有函数

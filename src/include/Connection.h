@@ -53,11 +53,12 @@ class Connection {
     void handleClose();
 
     //采用在本线程直接写的做法
-    void send(const std::string msg);
+    //非阻塞写
+    void send(const std::string& msg);
     void send(const char* data, ssize_t len);
     //由send调用，保证在本Epoll的线程内发送数据
     //避免不同线程读写统一socket的情况
-    void sendInLoop(const std::string& str);
+    void sendInLoop(const std::string str);
     void sendInLoop(const char* data, ssize_t len);
     void read();
 

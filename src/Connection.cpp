@@ -18,7 +18,8 @@
 
 Connection::Connection(EventLoop* loop, Socket* sock)
     : _loop(loop),
-      _sock(sock) {
+      _sock(sock),
+      _connetionCallback([](Connection*){}){
     _channel = std::make_unique<Channel>(_loop, _sock->getFd());
     _readBuffer = std::make_unique<Buffer>();
     _writeBuffer = std::make_unique<Buffer>();
@@ -47,12 +48,12 @@ void Connection::echo() {
         //_readBuffer->print();
         if (bytes_read > 0) {
             std::string msg = _readBuffer->retrieveAllAsString();
-            printf("message from client fd %d: %s\n", sockfd, msg.c_str());
+            //printf("message from client fd %d: %s\n", sockfd, msg.c_str());
             write(sockfd, msg.c_str(), msg.length());
         }
         else if (bytes_read == -1 &&
                  errCode == EINTR) { //客户端正常中断、继续读取
-            printf("continue reading");
+            //printf("continue reading");
             continue;
         }
         else if (bytes_read == -1 &&
@@ -91,8 +92,10 @@ Socket* Connection::getSocket() {
 void Connection::handleRead() {
     //先读取所有数据到Buffer中，再调用用户注册的回调函数
     int savedErrno;
+    //printf("handleRead()\n");
     while (true) {
         ssize_t n = _readBuffer->readFd(_sock->getFd(), &savedErrno);
+        //printf("read bytes %d\n", n);
         if (n == 0) {
             printf("read EOF, client fd %d disconnected\n", _sock->getFd());
             handleClose();
@@ -108,7 +111,9 @@ void Connection::handleRead() {
             }
         }
     }
-    if(_state == Connected){
+    //printf("handleRead END \n");
+    if (_state == Connected) {
+       // printf("call user messagecallback\n");
         _messageCallback(this, _readBuffer.get());
     }
 }
@@ -156,7 +161,10 @@ void Connection::handleClose() {
 }
 
 //采用在本线程直接写的做法
-void Connection::send(std::string msg) { send(msg.data(), msg.length()); }
+void Connection::send(const std::string& msg) {
+    send(msg.data(), msg.length());
+}
+
 //对于用户来讲，默认调用一次send，发送模块就会将数据完整的发送过去，不需要自己控制发送中的各种情况
 void Connection::send(const char* data, ssize_t len) {
     if (_state == Connected) {
@@ -165,8 +173,10 @@ void Connection::send(const char* data, ssize_t len) {
         }
         //如果不在自己的IO线程运行，需要将其移动到自己的IO线程上运行
         else {
-            void (Connection::*fp)(const char* data, ssize_t len) = &Connection::sendInLoop;
-            _loop->runInLoop(std::bind(fp, this, data, len));
+            void (Connection::*fp)(const std::string) =
+                &Connection::sendInLoop;
+            //跨进程传递数据需要将数据拷贝，因此再构造一个string作为参数。否则之后会自动析构数据对象导致内存访问出错。
+            _loop->runInLoop(std::bind(fp, this, std::string(data, len)));
         }
     }
     else {
@@ -174,7 +184,7 @@ void Connection::send(const char* data, ssize_t len) {
     }
 }
 
-void Connection::sendInLoop(const std::string& msg) {
+void Connection::sendInLoop(const std::string msg) {
     sendInLoop(msg.data(), msg.size());
 }
 
@@ -186,8 +196,10 @@ void Connection::sendInLoop(const char* data, ssize_t len) {
         //因为使用的是ET触发，应一次性将所有数据写入，直到写完或写满
         while(haveWrite < len){
             int n = ::write(_sock->getFd(), data + haveWrite, len - haveWrite);
+            //printf("write %d bytes!\n", n);
             if (n >= 0) {
                 haveWrite += n;
+                
             }
             //n == -1 通常是缓冲区已满
             else {
