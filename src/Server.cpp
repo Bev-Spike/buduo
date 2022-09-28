@@ -39,7 +39,7 @@ Server::Server(EventLoop* loop) : _mainReactor(loop) {
 void Server::newConnction(Socket* clntSock) {
     //使用完全随机调度策略，将该连接socket描述符添加到一个subReactor中。
     int random = clntSock->getFd() % _subReactors.size();
-    std::unique_ptr<Connection> conn(new Connection(_subReactors[random].get(), clntSock));
+    std::shared_ptr<Connection> conn(new Connection(_subReactors[random].get(), clntSock));
     //设置删除连接的回调函数，当客户任务结束时调用
     std::function<void(Socket*)> cb =
         std::bind(&Server::deleteConnection, this, std::placeholders::_1);
@@ -47,7 +47,7 @@ void Server::newConnction(Socket* clntSock) {
     conn->setMessageCallBack(_messageCallback);
     conn->setConnectionCallBack(_connetionCallback);
     conn->connectionEstablished();
-    connections[clntSock->getFd()] = move(conn);
+    connections[clntSock->getFd()] = conn;
 }
 
 void Server::deleteConnection(Socket* clntSock) {

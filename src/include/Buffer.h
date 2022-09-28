@@ -1,4 +1,5 @@
 #pragma once
+#include <bits/stdint-intn.h>
 #include <cstddef>
 #include <iostream>
 #include <string>
@@ -67,8 +68,10 @@ class Buffer {
         std::string data = std::string(peek(), readableBytes());
         std::cout << data << std::endl;
     }
-     //缓冲区可读内存的首地址
+    //缓冲区可读内存的首地址
     char* peek();
+    //以小端的方式读取2字节的数据，以Int16类型返回
+    int16_t peekInt16();
   private:
     //缓冲区内存的首地址
     char* begin();

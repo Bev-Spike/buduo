@@ -1,4 +1,5 @@
 #include "Buffer.h"
+#include <bits/stdint-intn.h>
 #include <bits/types/struct_iovec.h>
 #include <cstddef>
 #include <iterator>
@@ -117,8 +118,13 @@ char* Buffer::begin() {
     return &*_buffer.begin();
 }
 //缓冲区可读内存的首地址
-char* Buffer::peek() {
-    return begin() + _readerIndex;
+char* Buffer::peek() { return begin() + _readerIndex; }
+//小端读取2字节，不修改读指针
+int16_t Buffer::peekInt16() {
+    errif(readableBytes() < sizeof(int16_t), "peek int16 error");
+    int16_t be16 = 0;
+    be16 = *peek() + *(peek() + 1) * 256;
+    return be16;
 }
 //可写内存的首地址
 char* Buffer::beginWrite() { return begin() + _writerIndex; }

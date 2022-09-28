@@ -58,7 +58,7 @@ int main() {
     //开启的线程数
     int threadsCnt = 100;
     //每个线程发送的消息数
-    int msgCnt = 100;
+    int msgCnt = 1000;
     ThreadPool* poll = new ThreadPool(threadsCnt);
     function<void()> func = std::bind(oneCilent, msgCnt);
     for (int i = 0; i < threadsCnt; i++) {

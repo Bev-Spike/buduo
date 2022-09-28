@@ -10,7 +10,7 @@
 class EventLoop;
 class Buffer;
 //连接类，用于负责一个连接，以及定义处理事件的逻辑
-class Connection {
+class Connection :public std::enable_shared_from_this<Connection>{
   public:
     enum State {
         Invalid = 1,
@@ -39,9 +39,6 @@ class Connection {
     //连接刚建立时调用，一个连接仅调用一次
     void connectionEstablished();
 
-
-    //自定义处理事件的逻辑
-    void echo();
     void setDeleteConnctionCallBack(std::function<void(Socket*)>);
 
     void setMessageCallBack(std::function<void(Connection*, Buffer*)>);

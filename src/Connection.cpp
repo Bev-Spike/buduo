@@ -39,37 +39,6 @@ void Connection::connectionEstablished() {
 }
 
 Connection::~Connection() { printf("Connction 析构\n"); }
-void Connection::echo() {
-    int sockfd = _sock->getFd();
-    int errCode;
-    while (
-        true) { //由于使用非阻塞IO，读取客户端buffer，一次读取buf大小数据，直到全部读取完毕
-        ssize_t bytes_read = _readBuffer->readFd(sockfd, &errCode);
-        //_readBuffer->print();
-        if (bytes_read > 0) {
-            std::string msg = _readBuffer->retrieveAllAsString();
-            //printf("message from client fd %d: %s\n", sockfd, msg.c_str());
-            write(sockfd, msg.c_str(), msg.length());
-        }
-        else if (bytes_read == -1 &&
-                 errCode == EINTR) { //客户端正常中断、继续读取
-            //printf("continue reading");
-            continue;
-        }
-        else if (bytes_read == -1 &&
-                 ((errCode == EAGAIN) ||
-                  (errCode ==
-                   EWOULDBLOCK))) { //非阻塞IO，这个条件表示数据全部读取完毕
-            printf("finish reading once, errno: %d\n", errCode);
-            break;
-        }
-        else if (bytes_read == 0) { // EOF，客户端断开连接
-            printf("EOF, client fd %d disconnected\n", sockfd);
-            handleClose();
-            break;
-        }
-    }
-}
 
 void Connection::setDeleteConnctionCallBack(std::function<void(Socket*)> cb) {
     _deleteConnectionCallBack = cb;
@@ -152,6 +121,9 @@ void Connection::handleWrite() {
 void Connection::handleClose() {
     _state = Closed;
     _connetionCallback(this);
+
+    //为了防止该对象突然被析构，这里使用一个智能指针保护起来。
+    std::shared_ptr<Connection> guard(shared_from_this());
 
     //在EpollLoop中移除channel
     _channel->remove();

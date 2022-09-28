@@ -22,7 +22,7 @@ class Server {
     //线程池
     std::unique_ptr<ThreadPool> _threadPool;
     std::unique_ptr<Acceptor> _acceptor;
-    std::unordered_map<int, std::unique_ptr<Connection>> connections;
+    std::unordered_map<int, std::shared_ptr<Connection>> connections;
     //用户定义回调函数
     std::function<void(Connection*, Buffer*)> _messageCallback;
     //用户连接建立和关闭时调用
