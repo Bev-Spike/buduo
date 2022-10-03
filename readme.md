@@ -55,6 +55,10 @@ yuesong-feng [三十天服务器系列](https://github.com/yuesong-feng/30dayMak
 
 ## 更新日志
 子模块测试
+
+*2022.10.3*  
+新增日志模块logger，目前实现了前端，采用默认的日志输出方式，即打印在控制台上
+
 *2022.9.28*<br>
 修复了BUG：连接销毁可能会出现的问题：如果关闭socket的时候马上就有新socket进来，就会马上析构连接对象，导致的内存安全问题。  
 具体方式：将server中的Connection类中的unique_ptr换成了shared_ptr,使用共享指针管理Connection对象的生命周期。同时，将Connection类继承enable_shared_from_this,在调用handleClose的时候，调用shared_from_this， 生成一个智能指针保证函数可以完整执行结束。
