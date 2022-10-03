@@ -6,6 +6,8 @@
 #include "Channel.h"
 #include "Acceptor.h"
 #include "ThreadPool.h"
+#include "Logger.h"
+
 #include <algorithm>
 #include <functional>
 #include <memory>
@@ -28,7 +30,8 @@ Server::Server(EventLoop* loop) : _mainReactor(loop) {
         std::function<void()> subLoop =
             std::bind(&EventLoop::loop, _subReactors[i].get());
         _threadPool->add(subLoop);
-        printf("subReactor %d 创建成功\n", i);
+        LOG_DEBUG << "subReactor  "<< i << " 创建成功";
+        // printf("subReactor %d 创建成功\n", i);
     }
 }
 
@@ -52,7 +55,8 @@ void Server::newConnction(Socket* clntSock) {
 
 void Server::deleteConnection(Socket* clntSock) {
     //由于采用的是延迟析构的做法，Connection对象内部对象的处理交给他自己，Server这边并不需要做什么
-    printf("deleteConnetion socket fd:%d \n", clntSock->getFd());
+    LOG_DEBUG << "deleteConnetion socket fd: "<< clntSock->getFd();
+    // printf("deleteConnetion socket fd:%d \n", clntSock->getFd());
 }
 
 void Server::setMessageCallback(std::function<void(Connection*, Buffer*)> fn) {

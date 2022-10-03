@@ -6,6 +6,7 @@
 #include "EventLoop.h"
 #include "InetAddress.h"
 #include "Channel.h"
+#include "Logger.h"
 #include <cstdio>
 #include <iostream>
 #include <memory>
@@ -19,9 +20,9 @@ using namespace std;
 
 void echo(Connection* conn, Buffer* readBuf) {
     string msg = readBuf->retrieveAllAsString();
-    std::cout << "Message from client " << conn->getSocket()->getFd() << ": "
-              << msg << std::endl;
 
+    LOG_INFO << "Message from client " << conn->getSocket()->getFd() << ": "
+              << msg;
     conn->send(msg);
 }
 
@@ -30,11 +31,11 @@ int main() {
     unique_ptr<Server> server(new Server(loop.get()));
     server->setMessageCallback(echo);
     server->setConnectionCallBack([](Connection* conn) {
-        if(conn->getState() == Connection::Connected)
-            cout << "hello new Connetion :" << conn->getSocket()->getFd()
-                 << endl;
+        if(conn->getState() == Connection::Connected){
+            LOG_INFO << "hello new Connetion :" << conn->getSocket()->getFd();
+        }
         else {
-            cout << "bye Connetion" << endl;
+            LOG_INFO << "bye Connetion";
         }
     });
     loop->loop();

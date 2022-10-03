@@ -6,7 +6,7 @@
 #include <functional>
 #include <memory>
 #include <sched.h>
-
+#include "Logger.h"
 Acceptor::Acceptor(EventLoop* loop) : _loop(loop) {
     _sock = std::make_unique<Socket>();
     _addr = std::make_unique<InetAddress>("127.0.0.1", 8888);
@@ -27,10 +27,11 @@ Acceptor::Acceptor(EventLoop* loop) : _loop(loop) {
 void Acceptor::acceptConnection() {
     InetAddress clntAddr;
     Socket* clntSock = new Socket(_sock->accept(clntAddr));
-    printf("new client fd %d! IP: %s Port: %d\n",
-           clntSock->getFd(),
-           inet_ntoa(clntAddr._addr.sin_addr),
-           ntohs(clntAddr._addr.sin_port));
+    // printf("new client fd %d! IP: %s Port: %d\n",
+    //        clntSock->getFd(),
+    //        inet_ntoa(clntAddr._addr.sin_addr),
+    //        ntohs(clntAddr._addr.sin_port));
+    LOG_DEBUG << "new client fd " << clntSock->getFd() << "! IP: " << inet_ntoa(clntAddr._addr.sin_addr) << " Port: " << ntohs(clntAddr._addr.sin_port);
     clntSock->setNonBlocking();
     _newConnctionCallBack(clntSock);
 }

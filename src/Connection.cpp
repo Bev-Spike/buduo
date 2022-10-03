@@ -4,6 +4,8 @@
 #include "Channel.h"
 #include "EventLoop.h"
 #include "Socket.h"
+#include "Logger.h"
+
 
 #include <asm-generic/errno-base.h>
 #include <asm-generic/errno.h>
@@ -38,7 +40,8 @@ void Connection::connectionEstablished() {
     _connetionCallback(this);
 }
 
-Connection::~Connection() { printf("Connction 析构\n"); }
+Connection::~Connection() {
+    LOG_DEBUG << "Connetion 析构"; }
 
 void Connection::setDeleteConnctionCallBack(std::function<void(Socket*)> cb) {
     _deleteConnectionCallBack = cb;
@@ -66,7 +69,8 @@ void Connection::handleRead() {
         ssize_t n = _readBuffer->readFd(_sock->getFd(), &savedErrno);
         //printf("read bytes %d\n", n);
         if (n == 0) {
-            printf("read EOF, client fd %d disconnected\n", _sock->getFd());
+            //printf("read EOF, client fd %d disconnected\n", _sock->getFd());
+            LOG_DEBUG << "read EOF, client fd" << _sock->getFd() <<  "disconnected";
             handleClose();
             break;
         }
@@ -108,7 +112,9 @@ void Connection::handleWrite() {
                 break;
             }
             else {
-                printf("Other error on client fd %d\n", _sock->getFd());
+                LOG_SYSERR << "Other error on client fd " << _sock->getFd();
+
+               // printf("Other error on client fd %d\n", _sock->getFd());
                 _state = State::Closed;
                 break;
             }
@@ -152,7 +158,8 @@ void Connection::send(const char* data, ssize_t len) {
         }
     }
     else {
-        printf("connection have closed\n");
+        LOG_ERROR << "connection have closed";
+        //printf("connection have closed\n");
     }
 }
 

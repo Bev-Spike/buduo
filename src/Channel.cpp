@@ -4,7 +4,7 @@
 #include <bits/stdint-uintn.h>
 #include <cstdio>
 #include <sys/epoll.h>
-
+#include "Logger.h"
 
 Channel::Channel(EventLoop* loop, int fd)
     : _loop(loop),
@@ -69,7 +69,8 @@ void Channel::handleEvent() {
         _writeCallBack();
     }
     else {
-        printf("This event cant be handle: %d\n", _revents);
+        //printf("This event cant be handle: %d\n", _revents);
+        LOG_ERROR << "This event cant be handle: " << _revents;
     }
 }
 

@@ -23,39 +23,17 @@ set(OUT_DIR "${CMAKE_SOURCE_DIR}/out")
 
 #目标源码目录
 set(NET_SRC_DIR "${CMAKE_SOURCE_DIR}/src")
-
+set(TEST_SRC_DIR "${CMAKE_SOURCE_DIR}/test")
 #头文件目录
 set(NET_INCLUDE_DIR "${CMAKE_SOURCE_DIR}/src/include")
 
-#子项目目录
 
-
-#编译目标名
-set(SERVER_TARGET server)
-set(CILENT_TARGET cilent)
-set(TEST_TARGET ttest)
+set(NET_LIB netlib)
 
 
 #编译子目录
 add_subdirectory(${NET_SRC_DIR}) 
-
+add_subdirectory(${TEST_SRC_DIR})
 # 添加头文件查找路径
 INCLUDE_DIRECTORIES(${NET_INCLUDE_DIR})
 
-set(NET_LIB netlib)
-
-# 设置输出路径
-set(EXECUTABLE_OUTPUT_PATH ${OUT_DIR})
-
-
-#设置编译目标
-add_executable(${SERVER_TARGET} ./test/server.cpp)
-add_executable(${CILENT_TARGET} ./test/chatCilent.cpp)
-add_executable(${TEST_TARGET} ./test/ttest.cpp)
-add_executable(mutiCilent ./test/mutiCilent.cpp)
-# 添加链接库
-
-target_link_libraries(${SERVER_TARGET} ${NET_LIB})
-target_link_libraries(${CILENT_TARGET} ${NET_LIB})
-target_link_libraries(${TEST_TARGET} ${NET_LIB})
-target_link_libraries(mutiCilent ${NET_LIB})
