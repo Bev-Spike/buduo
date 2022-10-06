@@ -2,6 +2,7 @@
 #include <bits/stdint-intn.h>
 #include <bits/types/struct_iovec.h>
 #include <cstddef>
+#include <cstring>
 #include <iterator>
 #include <string>
 #include <sys/types.h>
@@ -123,7 +124,7 @@ char* Buffer::peek() { return begin() + _readerIndex; }
 int16_t Buffer::peekInt16() {
     errif(readableBytes() < sizeof(int16_t), "peek int16 error");
     int16_t be16 = 0;
-    be16 = *peek() + *(peek() + 1) * 256;
+    memcpy(&be16, peek(), sizeof(int16_t));
     return be16;
 }
 //可写内存的首地址
