@@ -7,10 +7,12 @@
 #include <sys/types.h>
 #include "Socket.h"
 #include "Channel.h"
+#include "MyTypedef.h"
 class EventLoop;
 class Buffer;
+
 //连接类，用于负责一个连接，以及定义处理事件的逻辑
-class Connection :public std::enable_shared_from_this<Connection>{
+class Connection : public std::enable_shared_from_this<Connection> {
   public:
     enum State {
         Invalid = 1,
@@ -30,9 +32,9 @@ class Connection :public std::enable_shared_from_this<Connection>{
     //删除连接的回调函数，由Server类定义
     std::function<void(Socket*)> _deleteConnectionCallBack;
     //定义接收到读事件之后的业务逻辑，由网络库的用户定义。
-    std::function<void(Connection*, Buffer*)> _messageCallback;
+    std::function<void(const ConnectionPTR&, Buffer*)> _messageCallback;
     //定义连接建立与关闭时的业务逻辑
-    std::function<void(Connection*)> _connetionCallback; 
+    std::function<void(const ConnectionPTR&)> _connetionCallback; 
   public:
     Connection(EventLoop* loop, Socket* sock);
     ~Connection();
@@ -41,8 +43,8 @@ class Connection :public std::enable_shared_from_this<Connection>{
 
     void setDeleteConnctionCallBack(std::function<void(Socket*)>);
 
-    void setMessageCallBack(std::function<void(Connection*, Buffer*)>);
-    void setConnectionCallBack(std::function<void(Connection*)>);
+    void setMessageCallBack(std::function<void(const ConnectionPTR&, Buffer*)>);
+    void setConnectionCallBack(std::function<void(const ConnectionPTR&)>);
     State getState();
     Socket* getSocket();
     void handleRead();

@@ -13,6 +13,10 @@ target_link_libraries(server ${NET_LIB})
 
 add_executable(chatCilent chatCilent.cpp)
 target_link_libraries(chatCilent ${NET_LIB})
+add_executable(chatServer chatServer.cpp)
+target_link_libraries(chatServer ${NET_LIB})
+
+
 
 add_executable(mutiCilent mutiCilent.cpp)
 target_link_libraries(mutiCilent ${NET_LIB})

@@ -1,6 +1,7 @@
 #include "Buffer.h"
 #include "Connection.h"
 #include "Epoll.h"
+#include "MyTypedef.h"
 #include "Server.h"
 #include "Socket.h"
 #include "EventLoop.h"
@@ -24,7 +25,7 @@ using namespace std;
 class ChatServer {
   private:
     unique_ptr<Server> _server;
-    unordered_map<int, Connection*> _connMap;
+    unordered_map<int, ConnectionPTR> _connMap;
     int userCnt;
     mutex _mtx;
   public:
@@ -42,7 +43,7 @@ class ChatServer {
     }
 
   private:
-    void onConnection(Connection* conn) {
+    void onConnection(ConnectionPTR conn) {
         printf("Connection %d %s\n", conn->getSocket()->getFd(), conn->getState()== Connection::Connected? "up" : "down");
 
         unique_lock<mutex> lock(_mtx);
@@ -56,11 +57,11 @@ class ChatServer {
         }
     }
     //遍历所有用户（自己除外），转发接收到的消息
-    void onMessage(Connection* conn, Buffer* buffer) {
+    void onMessage(ConnectionPTR conn, Buffer* buffer) {
         string msg = buffer->retrieveAllAsString();
         cout << "收到"  << conn->getSocket()->getFd() << "的消息:" << msg << endl;
         for (auto& pair : _connMap) {
-            Connection* user = pair.second;
+            ConnectionPTR user = pair.second;
             if (user != conn) {
                 user->send(msg);
             }

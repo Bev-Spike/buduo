@@ -59,11 +59,11 @@ void Server::deleteConnection(Socket* clntSock) {
     // printf("deleteConnetion socket fd:%d \n", clntSock->getFd());
 }
 
-void Server::setMessageCallback(std::function<void(Connection*, Buffer*)> fn) {
+void Server::setMessageCallback(std::function<void(const ConnectionPTR&, Buffer*)> fn) {
     _messageCallback = std::move(fn);
 }
 
 
-void Server::setConnectionCallBack(std::function<void(Connection*)> cb) {
+void Server::setConnectionCallBack(std::function<void(const ConnectionPTR&)> cb) {
     _connetionCallback = std::move(cb);
 }

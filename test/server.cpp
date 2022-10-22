@@ -1,6 +1,7 @@
 #include "Buffer.h"
 #include "Connection.h"
 #include "Epoll.h"
+#include "MyTypedef.h"
 #include "Server.h"
 #include "Socket.h"
 #include "EventLoop.h"
@@ -18,7 +19,7 @@
 using namespace std;
 
 
-void echo(Connection* conn, Buffer* readBuf) {
+void echo(ConnectionPTR conn, Buffer* readBuf) {
     string msg = readBuf->retrieveAllAsString();
 
     LOG_INFO << "Message from client " << conn->getSocket()->getFd() << ": "
@@ -30,7 +31,7 @@ int main() {
     unique_ptr<EventLoop> loop(new EventLoop());
     unique_ptr<Server> server(new Server(loop.get()));
     server->setMessageCallback(echo);
-    server->setConnectionCallBack([](Connection* conn) {
+    server->setConnectionCallBack([](ConnectionPTR conn) {
         if(conn->getState() == Connection::Connected){
             LOG_INFO << "hello new Connetion :" << conn->getSocket()->getFd();
         }

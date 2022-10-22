@@ -21,7 +21,7 @@
 Connection::Connection(EventLoop* loop, Socket* sock)
     : _loop(loop),
       _sock(sock),
-      _connetionCallback([](Connection*){}){
+      _connetionCallback([](const ConnectionPTR&){}){
     _channel = std::make_unique<Channel>(_loop, _sock->getFd());
     _readBuffer = std::make_unique<Buffer>();
     _writeBuffer = std::make_unique<Buffer>();
@@ -37,7 +37,7 @@ void Connection::connectionEstablished() {
     _channel->setIsEt(true);
     _channel->enableReading();
     _state = Connected;
-    _connetionCallback(this);
+    _connetionCallback(shared_from_this());
 }
 
 Connection::~Connection() {
@@ -47,11 +47,11 @@ void Connection::setDeleteConnctionCallBack(std::function<void(Socket*)> cb) {
     _deleteConnectionCallBack = cb;
 }
 
-void Connection::setMessageCallBack(std::function<void(Connection*, Buffer*)> callback) {
+void Connection::setMessageCallBack(std::function<void(const ConnectionPTR&, Buffer*)> callback) {
     _messageCallback = callback;
 }
 
-void Connection::setConnectionCallBack(std::function<void(Connection*)> cb) {
+void Connection::setConnectionCallBack(std::function<void(const ConnectionPTR&)> cb) {
     _connetionCallback = cb;
 }
 
@@ -86,8 +86,9 @@ void Connection::handleRead() {
     }
     //printf("handleRead END \n");
     if (_state == Connected) {
-       // printf("call user messagecallback\n");
-        _messageCallback(this, _readBuffer.get());
+        // printf("call user messagecallback\n");
+        auto connPTR = shared_from_this();
+        _messageCallback(connPTR, _readBuffer.get());
     }
 }
 
@@ -126,7 +127,7 @@ void Connection::handleWrite() {
 // socket fd出现时，自动将当前的connection对象覆盖并析构掉
 void Connection::handleClose() {
     _state = Closed;
-    _connetionCallback(this);
+    _connetionCallback(shared_from_this());
 
     //为了防止该对象突然被析构，这里使用一个智能指针保护起来。
     std::shared_ptr<Connection> guard(shared_from_this());

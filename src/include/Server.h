@@ -24,9 +24,9 @@ class Server {
     std::unique_ptr<Acceptor> _acceptor;
     std::unordered_map<int, std::shared_ptr<Connection>> connections;
     //用户定义回调函数
-    std::function<void(Connection*, Buffer*)> _messageCallback;
+    std::function<void(const ConnectionPTR&, Buffer*)> _messageCallback;
     //用户连接建立和关闭时调用
-    std::function<void(Connection*)> _connetionCallback;
+    std::function<void(const ConnectionPTR&)> _connetionCallback;
   public:
     Server(EventLoop*);
     ~Server() = default;
@@ -35,9 +35,9 @@ class Server {
     }
 
     //设置用户自定义事件处理
-    void setMessageCallback(std::function<void(Connection*, Buffer*)> fn);
+    void setMessageCallback(std::function<void(const ConnectionPTR&, Buffer*)> fn);
     //该函数可用于连接建立和连接关闭时用户所作出的行为
-    void setConnectionCallBack(std::function<void(Connection*)>);
+    void setConnectionCallBack(std::function<void(const ConnectionPTR&)>);
 
 
     //自定义建立连接事件，由Acceptor调用
